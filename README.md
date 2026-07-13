@@ -31,7 +31,7 @@ Proyecto para prueba como Ingeniero de Desarrollo Senior con manejor de Azure | 
 
 
 ## Para tener en cuenta para probar el desarrollo:
-- La Base de Datos relacional fu usada localmente con Sql Server "**SQLEXPRESS**" (Dependiendo del server que se pruebe hay que cambiarlo en el appsettings "ConStringSqlServer" el valor **<SERVER>**) y trabaja con el usuario **developer**. Los scripts de esta BD están en: **"ScriptsDb/SQL/"**. 
+- La Base de Datos relacional fu usada localmente con Sql Server "**SQLEXPRESS**" (Dependiendo del server que se pruebe hay que cambiarlo en el appsettings "ConStringSqlServer" el valor **'<SERVER'>**) y trabaja con el usuario **developer**. Los scripts de esta BD están en: **"ScriptsDb/SQL/"**. 
   - **1-createUserForDb.sql** creación del usuario en la base de datos.
   - **2-scriptsDb.sql** creación de la tabla.
 - La Base de Datos Mongo fue probada con COMPASS y se debe generar con Docker usando el script que se encuentra en **"ScriptsDb/MONGO/"**.
