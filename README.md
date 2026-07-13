@@ -31,7 +31,7 @@ Proyecto para prueba como Ingeniero de Desarrollo Senior con manejor de Azure | 
 
 
 ## Para tener en cuenta para probar el desarrollo:
-- La Base de Datos relacional fu usada localmente con Sql Server "**SQLEXPRESS**" y trabaja con el usuario **developer**. Los scripts de esta BD están en: **"ScriptsDb/"**. 
+- La Base de Datos relacional fu usada localmente con Sql Server "**SQLEXPRESS**" y trabaja con el usuario **developer**. Los scripts de esta BD están en: **"ScriptsDb/SQL/"**. 
   - **1-createUserForDb.sql** creación del usuario en la base de datos.
   - **2-scriptsDb.sql** creación de la tabla.
 - Por seguridad, se debe generar primero un token con el EndPoint GET **"Authentication"** (La idea es que a futuro se valide el usuario con la Base de Datos y así generarlo o no, mientras tanto para probar se está generando el TOKEN a todos los usuarios), luego se pasa a través de la cabecera utilizando autenticación Bearer.
