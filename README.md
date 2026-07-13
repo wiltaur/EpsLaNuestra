@@ -31,8 +31,9 @@ Proyecto para prueba como Ingeniero de Desarrollo Senior con manejor de Azure | 
 
 
 ## Para tener en cuenta para probar el desarrollo:
-- La Base de Datos relacional fu usada localmente con Sql Server "**SQLEXPRESS**" y trabaja con el usuario **developer**. Los scripts de esta BD están en: **"ScriptsDb/SQL/"**. 
+- La Base de Datos relacional fu usada localmente con Sql Server "**SQLEXPRESS**" (Dependiendo del server que se pruebe hay que cambiarlo en el appsettings "ConStringSqlServer" el valor **<SERVER>**) y trabaja con el usuario **developer**. Los scripts de esta BD están en: **"ScriptsDb/SQL/"**. 
   - **1-createUserForDb.sql** creación del usuario en la base de datos.
   - **2-scriptsDb.sql** creación de la tabla.
+- La Base de Datos Mongo fue probada con COMPASS y se debe generar con Docker usando el script que se encuentra en **"ScriptsDb/MONGO/"**.
 - Por seguridad, se debe generar primero un token con el EndPoint GET **"Authentication"** (La idea es que a futuro se valide el usuario con la Base de Datos y así generarlo o no, mientras tanto para probar se está generando el TOKEN a todos los usuarios), luego se pasa a través de la cabecera utilizando autenticación Bearer.
 - Las Variables de entorno como se explicó en la respuesta de la prueba, en un despliegue hacia una AppService de Azure, la sesión **"SecretsValues"** serán gestionadas desde los secretos de KeyVault... Con esto, por motivos de seguridad, el archivo **"(appsettings.json)"** ya no debería contener dichas variables de entorno.
