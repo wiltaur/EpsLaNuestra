@@ -1,0 +1,87 @@
+﻿@page "/monitoreo-admisiones"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<PageTitle>Monitoreo de Admisiones</PageTitle>
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Panel de Admisiones en Tiempo Real</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th>Número de Paciente</th>
+                        <th>Valor Copago</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Admissions.Any())
+                    {
+                        <tr>
+                            <td colspan="2" class="text-center text-muted">Esperando nuevas admisiones desde la API...</td>
+                        </tr>
+                    }
+                    @foreach (var admission in Admissions)
+                    {
+                        <tr>
+                            <td><strong>@admission.PatientNumber</strong></td>
+                            <td class="text-success fw-bold">@admission.CopaymentAmount.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private HubConnection? hubConnection;
+    private List<AdmissionModel> Admissions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/admisionHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        // Suscription Event - SignalR
+        hubConnection.On<string, int>("ReceiveAdmission", async (patientNumber, copaymentAmount) =>
+        {
+            // Thread-safe
+            await InvokeAsync(() =>
+            {
+                Admissions.Insert(0, new AdmissionModel
+                {
+                    PatientNumber = patientNumber,
+                    CopaymentAmount = copaymentAmount
+                });
+
+                StateHasChanged();
+            });
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    // Frees up resources when closing the tab or navigating to another route.
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            hubConnection.Remove("RecibirAdmision");
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    private class AdmissionModel
+    {
+        public string PatientNumber { get; set; } = string.Empty;
+        public int CopaymentAmount { get; set; }
+    }
+}
