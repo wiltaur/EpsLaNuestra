@@ -1,4 +1,5 @@
 using EpsLaNuestra.Application.Features.Patients.Commands;
+using EpsLaNuestra.Application.Utilities;
 using EpsLaNuestra.Domain.Interfaces;
 using EpsLaNuestra.Domain.Interfaces.Repositories;
 using EpsLaNuestra.Domain.Persistence;
@@ -46,6 +47,11 @@ builder.Services.AddResiliencePipeline("sql-retry-pipeline", pipelineBuilder =>
     });
 });
 
+//IOptions - POCO
+builder.Services.Configure<BlazorServerSettings>(
+    builder.Configuration.GetSection("BlazorServerSettings")
+);
+
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings")
 );
@@ -70,6 +76,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Admit
 builder.Services.AddScoped<IPatientMongoRepository, PatientMongoRepository>();
 builder.Services.AddScoped<IPatientSqlRepository, PatientSqlRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IBlazorConnectUtility, BlazorConnectUtility>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -78,7 +85,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Luxury Properties USA API",
+        Title = "EPS La Nuestra API",
         Version = "v1"
     });
     options.AddSecurityDefinition("Bearer",

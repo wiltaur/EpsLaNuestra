@@ -16,16 +16,19 @@ public class AdmitPatientCommandHandler : IRequestHandler<AdmitPatientCommand, A
     private readonly IUnitOfWork _unitOfWork;
     private readonly ResiliencePipeline _sqlResiliencePipeline;
     private readonly ILogger<AdmitPatientCommandHandler> _logger;
+    private readonly IBlazorConnectUtility _blazorConnectUtility;
 
     public AdmitPatientCommandHandler(IPatientMongoRepository patientRepository, 
         IUnitOfWork unitOfWork,
         ResiliencePipelineProvider<string> pipelineProvider,
-        ILogger<AdmitPatientCommandHandler> logger)
+        ILogger<AdmitPatientCommandHandler> logger,
+        IBlazorConnectUtility blazorConnectUtility)
     {
         _patientMongoRepository = patientRepository;
         _unitOfWork = unitOfWork;
         _sqlResiliencePipeline = pipelineProvider.GetPipeline("sql-retry-pipeline");
         _logger = logger;
+        _blazorConnectUtility = blazorConnectUtility;
     }
 
     public async Task<ApiResponseUtility<bool>> Handle(AdmitPatientCommand request, CancellationToken cancellationToken)
@@ -48,6 +51,8 @@ public class AdmitPatientCommandHandler : IRequestHandler<AdmitPatientCommand, A
                 throw;
             }
 
+            await _blazorConnectUtility.SendEventToBlazor(request.PatientHistory.Id, request.PatientHistory.Copayment);
+
             return new ApiResponseUtility<bool>(true)
             {
                 IsSuccess = true,
@@ -56,6 +61,10 @@ public class AdmitPatientCommandHandler : IRequestHandler<AdmitPatientCommand, A
         }
         catch (Exception ex)
         {
+            //TODO: A futuro acá implementar el envío del mensaje con el NumeroDocumento del paciente y ValorCopago
+            //para que una Azure Function la tome y ejecute el proceso de generar la Admisión
+            //y así no quede en estado inconsistente...
+
             return new ApiResponseUtility<bool>(false)
             {
                 IsSuccess = false,
