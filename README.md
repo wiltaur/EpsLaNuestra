@@ -2,7 +2,7 @@
 Proyecto para prueba como Ingeniero de Desarrollo Senior con manejor de Azure | Net 8 C# (API y RAZOR)
 **Developed with**:
 - Clean Architecture DDD
-- Design Patterns (MediatR[CQRS], UnitOfWork, Repository, Singleton, Polly)
+- Design Patterns (MediatR[CQRS], UnitOfWork, Repository, Singleton, Polly, FluetValidation)
 - Best Practices based on some SOLID Principles
 - Security with JWT
 - UnitTest with XUnit and Moq
@@ -82,9 +82,27 @@ public async Task<IActionResult> GenerarReporteMensual([FromQuery] int pagina = 
 ```
 
 ## Para tener en cuenta para probar el desarrollo:
-- La Base de Datos relacional fu usada localmente con Sql Server "**SQLEXPRESS**" (Dependiendo del server que se pruebe hay que cambiarlo en el appsettings "ConStringSqlServer" el valor **'<SERVER'>**) y trabaja con el usuario **developer**. Los scripts de esta BD están en: **"ScriptsDb/SQL/"**. 
+- La Base de Datos relacional fué usada localmente con Sql Server "**SQLEXPRESS**" (Dependiendo del server que se pruebe hay que cambiarlo en el appsettings "ConStringSqlServer" el valor **'<SERVER'>**) y trabaja con el usuario **developer**. Los scripts de esta BD están en: **"ScriptsDb/SQL/"**. 
   - **1-createUserForDb.sql** creación del usuario en la base de datos.
   - **2-scriptsDb.sql** creación de la tabla.
 - La Base de Datos Mongo fue probada con COMPASS y se debe generar con Docker usando el script que se encuentra en **"ScriptsDb/MONGO/"**.
-- Por seguridad, se debe generar primero un token con el EndPoint GET **"Authentication"** (La idea es que a futuro se valide el usuario con la Base de Datos y así generarlo o no, mientras tanto para probar se está generando el TOKEN a todos los usuarios), luego se pasa a través de la cabecera utilizando autenticación Bearer.
+- Por seguridad, se debe generar primero un token con el EndPoint GET **"Authentication"** (La idea es que a futuro se valide el usuario con la Base de Datos y así generarlo o no, mientras tanto para probar se está generando el TOKEN a todos los usuarios), luego se pasa a través de la cabecera utilizando autenticación Bearer, su duración es de 10 minutos.
+- Se utiliza FluentValidation para estar seguro que lleguen los valores obligatorios, esta es la estructura usada para probar el EndPoint:
+  ```javascript
+  {
+    "resourceType": "Bundle",
+    "id": "hc-2026-abc",
+    "type": "document",
+    "patient": {
+      "numberId": "1234567890",
+      "name": "Ana Gómez"
+    },
+    "clinicalData": {
+      "observations": "Paciente con evolución favorable."
+    },
+    "paymentData": {
+      "copayment": 21000
+    }
+  }
+  ```
 - Las Variables de entorno como se explicó en la respuesta de la prueba, en un despliegue hacia una AppService de Azure, la sesión **"SecretsValues"** serán gestionadas desde los secretos de KeyVault... Con esto, por motivos de seguridad, el archivo **"(appsettings.json)"** ya no debería contener dichas variables de entorno.
