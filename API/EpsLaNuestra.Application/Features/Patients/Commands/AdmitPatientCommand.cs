@@ -1,5 +1,5 @@
-﻿using EpsLaNuestra.Application.DTOs;
-using EpsLaNuestra.Application.Utilities;
+﻿using EpsLaNuestra.Application.Utilities;
+using EpsLaNuestra.Domain.DTOs;
 using MediatR;
 
 namespace EpsLaNuestra.Application.Features.Patients.Commands;

@@ -1,4 +1,5 @@
-﻿using EpsLaNuestra.Domain.Interfaces;
+﻿using EpsLaNuestra.Domain.DTOs;
+using EpsLaNuestra.Domain.Interfaces;
 using EpsLaNuestra.Domain.Persistence;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,7 @@ public class BlazorConnectUtility : IBlazorConnectUtility
         _options = options;
     }
 
-    public async Task SendEventToBlazor(string patientNumber, int copaymentAmount)
+    public async Task SendEventToBlazor(PatientHistoryDto patientHistory, CancellationToken cancellationToken)
     {
         _ = Task.Run(async () =>
         {
@@ -30,7 +31,12 @@ public class BlazorConnectUtility : IBlazorConnectUtility
 
                 await connection.StartAsync();
 
-                await connection.InvokeAsync(_options.Value.SignalNotify, patientNumber, copaymentAmount);
+                await connection.InvokeAsync(
+                    _options.Value.SignalNotify,
+                    patientHistory.NumberId,
+                    patientHistory.Name,
+                    patientHistory.Copayment, 
+                    cancellationToken);
             }
             catch (Exception ex)
             {
@@ -44,7 +50,7 @@ public class BlazorConnectUtility : IBlazorConnectUtility
                     await connection.DisposeAsync();
                 }
             }
-        });
+        }, cancellationToken);
         await Task.CompletedTask;
     }
 }

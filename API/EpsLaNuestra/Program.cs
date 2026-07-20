@@ -1,13 +1,15 @@
 using EpsLaNuestra.Application.Features.Patients.Commands;
 using EpsLaNuestra.Application.Utilities;
+using EpsLaNuestra.Application.Validators;
+using EpsLaNuestra.Application.Wrappers;
 using EpsLaNuestra.Domain.Interfaces;
 using EpsLaNuestra.Domain.Interfaces.Repositories;
 using EpsLaNuestra.Domain.Persistence;
 using EpsLaNuestra.Infrastructure;
 using EpsLaNuestra.Infrastructure.Data;
 using EpsLaNuestra.Infrastructure.Repositories;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -71,6 +73,9 @@ builder.Services.AddScoped<MongoDbContext>();
 
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(AdmitPatientCommand).Assembly));
+
+//FluentValidation
+builder.Services.AddScoped<IValidator<PatientJsonWrapper>, PatientJsonValidator>();
 
 // Repositorios y UoW
 builder.Services.AddScoped<IPatientMongoRepository, PatientMongoRepository>();

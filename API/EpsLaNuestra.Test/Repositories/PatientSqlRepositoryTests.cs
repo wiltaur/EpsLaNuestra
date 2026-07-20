@@ -1,72 +1,52 @@
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Moq;
-using EpsLaNuestra.Infrastructure.Repositories;
-using EpsLaNuestra.Infrastructure.Data;
 using EpsLaNuestra.Domain.Entities;
+using EpsLaNuestra.Infrastructure.Data;
+using EpsLaNuestra.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace EpsLaNuestra.Test.Repositories
 {
     public class PatientSqlRepositoryTests
     {
-        [Fact]
-        public async Task SaveTransactionAsync_Calls_AddAsync_With_Correct_Parameters()
+        private SqlServerDbContext GetInMemoryContext()
         {
-            // Arrange
-            var mockSet = new Mock<DbSet<Copayment>>();
-            mockSet
-                .Setup(s => s.AddAsync(It.IsAny<Copayment>(), It.IsAny<CancellationToken>()))
-                .Returns((Copayment cp, CancellationToken ct) =>
-                    new ValueTask<EntityEntry<Copayment>>((EntityEntry<Copayment>)null));
+            var options = new DbContextOptionsBuilder<SqlServerDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
 
-            var options = new DbContextOptions<SqlServerDbContext>();
-            var mockContext = new Mock<SqlServerDbContext>(options);
-            mockContext.SetupGet(c => c.Copayments).Returns(mockSet.Object);
-
-            var repository = new PatientSqlRepository(mockContext.Object);
-
-            var copayment = new Copayment { PatientDocument = "123", CopaymentValue = 50 };
-            using var cts = new CancellationTokenSource();
-            var token = cts.Token;
-
-            // Act
-            await repository.SaveTransactionAsync(copayment, token);
-
-            // Assert
-            mockSet.Verify(
-                s => s.AddAsync(
-                    It.Is<Copayment>(p => ReferenceEquals(p, copayment)),
-                    It.Is<CancellationToken>(t => t == token)
-                ),
-                Times.Once);
+            return new SqlServerDbContext(options);
         }
 
         [Fact]
-        public async Task SaveTransactionAsync_Does_Not_Call_SaveChangesAsync()
+        public async Task SaveTransactionAsync_ShouldInsert_WhenPatientDoesNotExist()
         {
-            // Arrange
-            var mockSet = new Mock<DbSet<Copayment>>();
-            mockSet
-                .Setup(s => s.AddAsync(It.IsAny<Copayment>(), It.IsAny<CancellationToken>()))
-                .Returns(new ValueTask<EntityEntry<Copayment>>((EntityEntry<Copayment>)null));
+            var context = GetInMemoryContext();
+            var repository = new PatientSqlRepository(context);
 
-            var options = new DbContextOptions<SqlServerDbContext>();
-            var mockContext = new Mock<SqlServerDbContext>(options);
-            mockContext.SetupGet(c => c.Copayments).Returns(mockSet.Object);
+            var copayment = new Copayment { PatientDocument = "123", CopaymentValue = 500 };
 
-            var repository = new PatientSqlRepository(mockContext.Object);
+            await repository.SaveTransactionAsync(copayment, CancellationToken.None);
+            await context.SaveChangesAsync();
 
-            var copayment = new Copayment { PatientDocument = "456", CopaymentValue = 75 };
-            var token = CancellationToken.None;
+            var saved = await context.Copayments.FindAsync("123");
+            Assert.NotNull(saved);
+            Assert.Equal(500, saved.CopaymentValue);
+        }
 
-            // Act
-            await repository.SaveTransactionAsync(copayment, token);
+        [Fact]
+        public async Task SaveTransactionAsync_ShouldUpdate_WhenPatientExists()
+        {
+            var context = GetInMemoryContext();
+            context.Copayments.Add(new Copayment { PatientDocument = "123", CopaymentValue = 200 });
+            await context.SaveChangesAsync();
 
-            // Assert
-            mockContext.Verify(
-                c => c.SaveChangesAsync(It.IsAny<CancellationToken>()),
-                Times.Never);
+            var repository = new PatientSqlRepository(context);
+            var copayment = new Copayment { PatientDocument = "123", CopaymentValue = 800 };
+
+            await repository.SaveTransactionAsync(copayment, CancellationToken.None);
+            await context.SaveChangesAsync();
+
+            var updated = await context.Copayments.FindAsync("123");
+            Assert.Equal(800, updated!.CopaymentValue);
         }
     }
 }

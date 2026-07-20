@@ -1,5 +1,7 @@
-﻿using EpsLaNuestra.Application.DTOs;
-using EpsLaNuestra.Application.Features.Patients.Commands;
+﻿using EpsLaNuestra.Application.Features.Patients.Commands;
+using EpsLaNuestra.Application.Wrappers;
+using EpsLaNuestra.Domain.DTOs;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,27 +25,32 @@ public class PatientController : ControllerBase
     /// Admit Patient with their medical history.
     /// </summary>
     /// <param name="rawJson">JSon FHIR/HL7 that content all information for a Patient.</param>
+    /// <param name="validator">Service Injection.</param>
     /// <returns>When admit successfully, true and Ok are returned, otherwise false and InternalError are returned.</returns>
     [HttpPost]
-    public async Task<IActionResult> AdmitPatient([FromBody] JsonElement rawJson)
+    public async Task<IActionResult> AdmitPatient(
+        [FromBody] JsonElement rawJson,
+        [FromServices] IValidator<PatientJsonWrapper> validator)
     {
-        if (rawJson.ValueKind != JsonValueKind.Object)
+        var wrapper = new PatientJsonWrapper { RawJson = rawJson };
+        var validationResult = validator.Validate(wrapper);
+
+        if (!validationResult.IsValid)
         {
-            return BadRequest("El cuerpo de la petición debe ser un objeto JSON válido.");
-        }
-        if (!rawJson.TryGetProperty("resourceType", out var resourceTypeProp) ||
-            !rawJson.TryGetProperty("id", out var idProp) ||
-            !rawJson.TryGetProperty("paymentData", out JsonElement paymentDataElement) ||
-            !paymentDataElement.TryGetProperty("copayment", out JsonElement copaymentElement))
-        {
-            return BadRequest("El JSON debe contener las propiedades obligatorias 'resourceType', 'id' y 'paymentData:copayment'.");
+            var errors = validationResult.Errors.Select(e => e.ErrorMessage);
+            return BadRequest(new { Errors = errors });
         }
 
+        var patientDataElement = rawJson.GetProperty("patient");
+        var paymentDataElement = rawJson.GetProperty("paymentData");
+        
         PatientHistoryDto patientHistory = new()
         {
-            ResourceType = resourceTypeProp.GetString()!,
-            Id = idProp.GetString()!,
-            Copayment = copaymentElement.GetInt32()!
+            ResourceType = rawJson.GetProperty("resourceType").GetString()!,
+            Id = rawJson.GetProperty("id").GetString()!,
+            NumberId = patientDataElement.GetProperty("numberId").GetString()!,
+            Name = patientDataElement.GetProperty("name").GetString()!,
+            Copayment = paymentDataElement.GetProperty("copayment").GetInt32()
         };
 
         var command = new AdmitPatientCommand(patientHistory, rawJson.GetRawText());

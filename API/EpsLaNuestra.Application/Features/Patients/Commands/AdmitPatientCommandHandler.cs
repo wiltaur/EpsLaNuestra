@@ -1,5 +1,5 @@
-﻿using EpsLaNuestra.Application.DTOs;
-using EpsLaNuestra.Application.Utilities;
+﻿using EpsLaNuestra.Application.Utilities;
+using EpsLaNuestra.Domain.DTOs;
 using EpsLaNuestra.Domain.Entities;
 using EpsLaNuestra.Domain.Interfaces;
 using EpsLaNuestra.Domain.Interfaces.Repositories;
@@ -18,7 +18,7 @@ public class AdmitPatientCommandHandler : IRequestHandler<AdmitPatientCommand, A
     private readonly ILogger<AdmitPatientCommandHandler> _logger;
     private readonly IBlazorConnectUtility _blazorConnectUtility;
 
-    public AdmitPatientCommandHandler(IPatientMongoRepository patientRepository, 
+    public AdmitPatientCommandHandler(IPatientMongoRepository patientRepository,
         IUnitOfWork unitOfWork,
         ResiliencePipelineProvider<string> pipelineProvider,
         ILogger<AdmitPatientCommandHandler> logger,
@@ -51,7 +51,7 @@ public class AdmitPatientCommandHandler : IRequestHandler<AdmitPatientCommand, A
                 throw;
             }
 
-            await _blazorConnectUtility.SendEventToBlazor(request.PatientHistory.Id, request.PatientHistory.Copayment);
+            await _blazorConnectUtility.SendEventToBlazor(request.PatientHistory, cancellationToken);
 
             return new ApiResponseUtility<bool>(true)
             {
@@ -77,7 +77,7 @@ public class AdmitPatientCommandHandler : IRequestHandler<AdmitPatientCommand, A
     {
         return new()
         {
-            PatientDocument = patientHistory.Id,
+            PatientDocument = patientHistory.NumberId,
             CopaymentValue = patientHistory.Copayment
         };
     }
