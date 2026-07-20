@@ -2,7 +2,7 @@
 Proyecto para prueba como Ingeniero de Desarrollo Senior con manejor de Azure | Net 8 C# (API y RAZOR)
 **Developed with**:
 - Clean Architecture DDD
-- Design Patterns (MediatR[CQRS], UnitOfWork, Repository, Singleton, Polly, FluetValidation)
+- Design Patterns (MediatR[CQRS], UnitOfWork, Repository, Singleton, Polly, FluentValidation)
 - Best Practices based on some SOLID Principles
 - Security with JWT
 - UnitTest with XUnit and Moq
@@ -106,3 +106,10 @@ public async Task<IActionResult> GenerarReporteMensual([FromQuery] int pagina = 
   }
   ```
 - Las Variables de entorno como se explicó en la respuesta de la prueba, en un despliegue hacia una AppService de Azure, la sesión **"SecretsValues"** serán gestionadas desde los secretos de KeyVault... Con esto, por motivos de seguridad, el archivo **"(appsettings.json)"** ya no debería contener dichas variables de entorno.
+- Para el FRONT tener en cuenta que el funcionamiento está en la opción del menú llamada **"Dashboard Admisiones"**:
+  - En este se podrán observar en tiempo real las admisiones que se procesan desde la API.
+  - Si llega una admisión con el mismo número de identificación de un paciente, se marcará por 3 segundo cambiando de color el registro actualizando el valor del copago, también quedará con un TAG **"modificado"** para diferenciarlos de los demás.
+  - Se puede cambiar de páginas y se conserva la información, solo será borrada de memoria cuando se cierran las pestañas del navegador.
+  - Tiene un campo de búsqueda para que se pueda filtrar la información de la tabla por Número de Documento y Nombre.
+  - Hay un campo contador de todas las admisiones que van ingresando al sistema.
+  - Hay un campo que suma el total de Copago de todas las admisiones.
