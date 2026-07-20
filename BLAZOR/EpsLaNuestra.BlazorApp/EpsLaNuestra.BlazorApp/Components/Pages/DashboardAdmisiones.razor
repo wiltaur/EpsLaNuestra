@@ -1,0 +1,155 @@
+﻿@* Components/Pages/DashboardAdmisiones.razor *@
+@page "/dashboard-admisiones"
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard de Admisiones en Tiempo Real</PageTitle>
+
+<div class="container-fluid px-4 mt-4">
+    <!-- Encabezado Principal -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Monitoreo de Admisiones</h2>
+            <small class="text-muted">Procesando Historias Clínicas HL7/FHIR en tiempo real</small>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Métricas Rápidas -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3 me-3">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" /></svg>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase font-monospace small">Total Pacientes</h6>
+                        <h3 class="fw-bold m-0 text-dark">@StateService.admissions.Count</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-success bg-opacity-10 text-success rounded-3 me-3">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M11 5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5zM1 2.5A1.5 1.5 0 0 1 2.5 1h11A1.5 1.5 0 0 1 15 2.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 13.5zM2.5 2a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5z" /></svg>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase font-monospace small">Total Copagos Recaudados</h6>
+                        <h3 class="fw-bold m-0 text-success">@StateService.admissions.Sum(a => a.Copayment).ToString("C")</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buscador Reactivo -->
+    <div class="row mb-3">
+        <div class="col-12 col-md-5 col-lg-4">
+            <div class="input-group shadow-sm rounded-3">
+                <span class="input-group-text bg-white border-end-0 text-muted">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" /></svg>
+                </span>
+                <input type="text"
+                       class="form-control border-start-0 ps-0"
+                       placeholder="Buscar por documento o nombre..."
+                       @bind="DataSearch"
+                       @bind:event="oninput" />
+                @if (!string.IsNullOrEmpty(DataSearch))
+                {
+                    <button class="btn btn-outline-secondary border-start-0 bg-white text-muted" type="button" @onclick="CleanFilter">
+                        ✕
+                    </button>
+                }
+            </div>
+        </div>
+        <div class="col-12 col-md-7 col-lg-8 d-flex align-items-center mt-2 mt-md-0">
+            @if (!string.IsNullOrEmpty(DataSearch))
+            {
+                <span class="text-muted small">
+                    Encontrados <strong>@FilteredAdmissions.Count()</strong> resultados de @StateService.admissions.Count
+                </span>
+            }
+        </div>
+    </div>
+
+    <!-- Tabla Principal de Admisiones -->
+    <div class="card border-0 shadow-sm rounded-3 bg-white overflow-hidden">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="fw-bold m-0 text-secondary">Admisiones Activas</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0">
+                <thead class="table-light text-uppercase font-monospace small">
+                    <tr>
+                        <th class="ps-4">Num. Documento</th>
+                        <th>Nombre Completo</th>
+                        <th>Valor Copago</th>
+                        <th class="text-end pe-4">Última Actualización</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!FilteredAdmissions.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                @if (string.IsNullOrEmpty(DataSearch))
+                                {
+                                    <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                    <span>Esperando transmisiones desde la API...</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger fw-semibold">No se encontraron admisiones que coincidan con la búsqueda.</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var admission in FilteredAdmissions)
+                        {
+                            <!-- Si fue actualizada hace poco, se le inyecta una clase css de alerta temporal -->
+                            <tr class="@(admission.JustUpdated ? "table-warning fw-semibold transition-effect" : "")">
+                                <td class="ps-4">
+                                    <span class="font-monospace text-primary fw-bold">@admission.NumberId</span>
+                                </td>
+                                <td>
+                                    <span class="text-dark">@admission.Name</span>
+                                </td>
+                                <td>
+                                    <span class="badge @(admission.JustUpdated ? "bg-warning text-dark" : "bg-success bg-opacity-10 text-success") px-2 py-2 fs-6">
+                                        @admission.Copayment.ToString("C")
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4 text-muted small">
+                                    @admission.RegisterDate.ToString("hh:mm:ss tt")
+                                    @if (admission.IsUpdate)
+                                    {
+                                        <span class="ms-2 badge bg-secondary text-uppercase" style="font-size: 0.65rem;">Modificado</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-effect {
+        animation: highlightFade 3s ease-in-out;
+    }
+
+    @@keyframes highlightFade {
+        0% {
+            background-color: rgba(255, 193, 7, 0.4);
+        }
+
+        100% {
+            background-color: transparent;
+        }
+    }
+</style>

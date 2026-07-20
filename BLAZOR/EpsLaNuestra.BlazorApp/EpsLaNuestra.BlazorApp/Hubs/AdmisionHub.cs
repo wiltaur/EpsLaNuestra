@@ -4,8 +4,8 @@ namespace EpsLaNuestra.BlazorApp.Hubs;
 
 public class AdmisionHub : Hub
 {
-    public async Task NotifyNewAdmission(string patientNumber, int copaymentAmount)
+    public async Task NotifyNewAdmission(string patientNumber, string patientName, int copaymentAmount)
     {
-        await Clients.All.SendAsync("ReceiveAdmission", patientNumber, copaymentAmount);
+        await Clients.All.SendAsync("ReceiveAdmission", patientNumber, patientName, copaymentAmount);
     }
 }
